@@ -90,11 +90,11 @@ export class Matrix4 {
         return this
     }
 
-    projection(width, height, depth) {
-        new Matrix4([
+    static projection(width, height, zoom) {
+        return new Matrix4([
             2 / width, 0, 0, 0,
             0, -2 / height, 0, 0,
-            0, 0, 2 / depth, 0,
+            0, 0, 2 / zoom, 0,
             -1, 1, 0, 1,
         ]);
     }
