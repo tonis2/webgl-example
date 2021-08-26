@@ -43,14 +43,13 @@ const vertexShaderData = `
     layout (location=0) in vec3 position;
     layout (location=1) in vec3 color;
 
-    uniform mat4 camera_matrix;
+    uniform mat4 cameraMatrix;
 
     out vec3 vColor;
 
     void main() {
-
         vColor = color;
-        gl_Position = vec4(position.x, position.y, position.z, 1.0);
+        gl_Position = cameraMatrix * vec4(position.x, position.y, position.z, 1.0);
     }
 `
 
@@ -114,22 +113,20 @@ const colors = new Float32Array([
     1.0, 0.5, 0.5
 ]);
 
-var matrix = Matrix4.projection(canvas.width, canvas.height, 400)
-
+var matrix = Matrix4.projection(10, 10, 100)
+matrix.translate([5.0, 5.0, 5.0])
+matrix.zRotate(degToRad(60))
 
 const uniformLocation = gl.getUniformLocation(program, "cameraMatrix");
-// gl.uniform4v(uniformLocation, matrix.content);
-console.log(uniformLocation)
 
-
+gl.uniformMatrix4fv(uniformLocation, false, new Float32Array(matrix.content));
 
 var vertexBuffer = createBuffer(vertices);
 var indexBuffer = createBuffer(indices);
 var colorBuffer = createBuffer(colors);
 
-
-
-
+setVertexBuffer(vertexBuffer, "position");
+setVertexBuffer(colorBuffer, "color");
 
 ////////////////
 // DRAW
@@ -139,18 +136,9 @@ const render = () => {
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    setVertexBuffer(vertexBuffer, "position");
-    setVertexBuffer(colorBuffer, "color");
-
-    gl.viewport(0, 0, canvas.width , canvas.height );
+    gl.viewport(0, 0, canvas.width, canvas.height);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 }
 
-
-
-
-
-window.requestAnimationFrame(() => {
-    render()
-})
+window.requestAnimationFrame(() => render())

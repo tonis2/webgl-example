@@ -11,6 +11,17 @@ export class Matrix4 {
         this.content = matrix
     }
 
+
+
+    static projection(width, height, zoom) {
+        return new Matrix4([
+            2 / width, 0, 0, 0,
+            0, -2 / height, 0, 0,
+            0, 0, 2 / zoom, 0,
+            -1, 1, 0, 1,
+        ]);
+    }
+
     translation(x, y, z) {
         return [
             1, 0, 0, 0,
@@ -90,14 +101,6 @@ export class Matrix4 {
         return this
     }
 
-    static projection(width, height, zoom) {
-        return new Matrix4([
-            2 / width, 0, 0, 0,
-            0, -2 / height, 0, 0,
-            0, 0, 2 / zoom, 0,
-            -1, 1, 0, 1,
-        ]);
-    }
 
     multiply(a, b) {
         var b00 = b[0 * 4 + 0];
