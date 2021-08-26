@@ -8,7 +8,7 @@ if (!gl) {
     document.body.innerHTML = "This example requires WebGL 2 which is unavailable on this system."
 }
 
-gl.clearColor(0, 0, 0, 1);
+
 
 /////////////////////
 // SET UP PROGRAM
@@ -19,6 +19,8 @@ const vertexShaderData = `
         
     layout (location=0) in vec3 position;
     layout (location=1) in vec3 color;
+
+    uniform mat4 camera_matrix;
 
     out vec3 vColor;
 
@@ -76,19 +78,23 @@ const indices = [
     3, 2, 1, 3, 1, 0
 ];
 
-var vertices = [
+const vertices = [
     -0.5, 0.5, 0.0,
     -0.5, -0.5, 0.0,
     0.5, -0.5, 0.0,
     0.5, 0.5, 0.0
 ];
 
-
-var colors = [
+const colors = [
     1.0, 0.0, 0.0,
     0.0, 1.0, 0.0,
     0.0, 0.0, 1.0
 ];
+
+const positionLocation = gl.getAttribLocation(program, "position");
+const colorLocation = gl.getAttribLocation(program, "color");
+const matrixLocation = gl.getUniformLocation(program, "camera_matrix");
+console.log(matrixLocation)
 
 
 var vertexBuffer = gl.createBuffer();
@@ -99,8 +105,10 @@ var colorBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(0);
+
+// Enable position in vert shader
+gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(positionLocation);
 
 
 //Indices
@@ -112,13 +120,21 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
+// Enable color in vert shader
+gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(colorLocation);
 
-gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(1);
+// Enable color in camera buffer
+// gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+// gl.enableVertexAttribArray(colorLocation);
 
 
 ////////////////
 // DRAW
 ////////////////
+
+gl.clearColor(0, 0, 0, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
+
+// gl.viewport(0,0, canvas.width,canvas.height);
 gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
