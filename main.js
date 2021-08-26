@@ -1,6 +1,11 @@
+import { Matrix4, degToRad, radToDeg } from "./utils.js"
+
 var canvas = document.getElementById("target");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+
+
 
 var gl = canvas.getContext("webgl2");
 if (!gl) {
@@ -8,7 +13,25 @@ if (!gl) {
     document.body.innerHTML = "This example requires WebGL 2 which is unavailable on this system."
 }
 
+let createBuffer = (arr) => {
+    // ⚪ Create Buffer
+    let buf = gl.createBuffer();
+    let bufType =
+        arr instanceof Uint16Array || arr instanceof Uint32Array ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
+    // 🩹 Bind Buffer to WebGLState
+    gl.bindBuffer(bufType, buf);
+    // 💾 Push data to VBO
+    gl.bufferData(bufType, arr, gl.STATIC_DRAW);
+    return buf;
+};
 
+
+let setVertexBuffer = (buffer, name) => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    let loc = gl.getAttribLocation(program, name);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc);
+};
 
 /////////////////////
 // SET UP PROGRAM
@@ -39,7 +62,7 @@ const fragmentShaderData = `
     out vec4 fragColor;
 
     void main() {
-        fragColor = vec4(vColor, 1.0);
+        fragColor = vec4(vColor, 0.5);
     }
 `
 
@@ -74,67 +97,60 @@ gl.useProgram(program);
 // SET UP GEOMETRY
 /////////////////////
 
-const indices = [
+const indices = new Uint16Array([
     3, 2, 1, 3, 1, 0
-];
+]);
 
-const vertices = [
+const vertices = new Float32Array([
     -0.5, 0.5, 0.0,
     -0.5, -0.5, 0.0,
     0.5, -0.5, 0.0,
     0.5, 0.5, 0.0
-];
+]);
 
-const colors = [
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    0.0, 0.0, 1.0
-];
+const colors = new Float32Array([
+    1.0, 1.0, 1.0,
+    1.0, 1.0, 0.5,
+    1.0, 0.5, 0.5
+]);
 
-const positionLocation = gl.getAttribLocation(program, "position");
-const colorLocation = gl.getAttribLocation(program, "color");
-const matrixLocation = gl.getUniformLocation(program, "camera_matrix");
-console.log(matrixLocation)
+var matrix = Matrix4.projection(canvas.width, canvas.height, 400)
 
 
-var vertexBuffer = gl.createBuffer();
-var indexBuffer = gl.createBuffer();
-var colorBuffer = gl.createBuffer();
-
-// Vertices
-gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+const uniformLocation = gl.getUniformLocation(program, "cameraMatrix");
+// gl.uniform4v(uniformLocation, matrix.content);
+console.log(uniformLocation)
 
 
-// Enable position in vert shader
-gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(positionLocation);
+
+var vertexBuffer = createBuffer(vertices);
+var indexBuffer = createBuffer(indices);
+var colorBuffer = createBuffer(colors);
 
 
-//Indices
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-//Colors
-
-gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-// Enable color in vert shader
-gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(colorLocation);
-
-// Enable color in camera buffer
-// gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
-// gl.enableVertexAttribArray(colorLocation);
 
 
 ////////////////
 // DRAW
 ////////////////
 
-gl.clearColor(0, 0, 0, 1);
-gl.clear(gl.COLOR_BUFFER_BIT);
+const render = () => {
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-// gl.viewport(0,0, canvas.width,canvas.height);
-gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+    setVertexBuffer(vertexBuffer, "position");
+    setVertexBuffer(colorBuffer, "color");
+
+    gl.viewport(0, 0, canvas.width , canvas.height );
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+}
+
+
+
+
+
+window.requestAnimationFrame(() => {
+    render()
+})
